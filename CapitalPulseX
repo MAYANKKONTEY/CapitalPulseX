@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CapitalPulseX — Markets · Business · Technology · Research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #060610;
+    --bg-secondary: #0c0c1e;
+    --bg-card: #0f0f22;
+    --bg-card2: #12122a;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(0,120,255,0.3);
+    --blue: #0078FF;
+    --blue-bright: #3399FF;
+    --blue-glow: rgba(0,120,255,0.15);
+    --gold: #C9A84C;
+    --gold-light: #E8C97E;
+    --red: #FF3B5C;
+    --green: #00D084;
+    --white: #F5F5FF;
+    --muted: rgba(245,245,255,0.45);
+    --muted2: rgba(245,245,255,0.2);
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --ticker-speed: 45s;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -800px 0; }
+    100% { background-position: 800px 0; }
+  }
+  @keyframes tickerScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 12px rgba(0,120,255,0.4); }
+    50%       { box-shadow: 0 0 28px rgba(0,120,255,0.8); }
+  }
+  @keyframes scanline {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── TOP ANNOUNCEMENT BAR ── */
+  .announcement-bar {
+    background: linear-gradient(90deg, #001033, #000822, #001033);
+    border-bottom: 1px solid var(--border-accent);
+    padding: 7px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .announcement-bar .live-dot {
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .announcement-bar .update-time { color: var(--gold); font-weight: 700; }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(6,6,16,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    gap: 24px;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+  }
+  .logo .Capital { color: var(--white); }
+  .logo .Pulse { color: var(--blue-bright); }
+  .logo .X {
+    color: var(--gold);
+    font-style: italic;
+    font-size: 30px;
+    margin-left: 2px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    animation: glow 3s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+
+  .header-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    transition: border-color 0.2s;
+  }
+  .header-search:focus-within { border-color: var(--blue); }
+  .header-search input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 13px;
+    width: 200px;
+  }
+  .header-search input::placeholder { color: var(--muted); }
+  .header-search svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; flex-shrink: 0; }
+
+  .btn-primary {
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary:hover { background: var(--blue-bright); transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { color: var(--white); border-color: var(--blue); }
+
+  /* ── NAV ── */
+  .nav-strip {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-strip::-webkit-scrollbar { display: none; }
+  .nav-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 46px;
+  }
+  .nav-item {
+    padding: 0 16px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .nav-item:hover, .nav-item.active {
+    color: var(--white);
+    border-bottom-color: var(--blue);
+  }
+  .nav-item.active { color: var(--blue-bright); }
+
+  /* ── TICKER ── */
+  .ticker-wrap {
+    background: #030318;
+    border-bottom: 1px solid var(--border-accent);
+    overflow: hidden;
+    padding: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+  .ticker-label {
+    background: var(--blue);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 0 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+    z-index: 2;
+  }
+  .ticker-inner {
+    display: flex;
+    animation: tickerScroll var(--ticker-speed) linear infinite;
+    gap: 0;
+    will-change: transform;
+  }
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 28px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+  }
+  .ticker-item .sym { color: var(--muted); font-weight: 700; font-size: 11px; letter-spacing: 0.5px; }
+  .ticker-item .price { color: var(--white); font-weight: 700; }
+  .ticker-item .chg.up { color: var(--green); }
+  .ticker-item .chg.down { color: var(--red); }
+
+  /* ── MAIN LAYOUT ── */
+  .main-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── HERO ── */
+  .hero-section {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeInUp 0.6s ease both;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 320px;
+    gap: 1px;
+    background: var(--border);
+  }
+  .hero-main {
+    background: var(--bg-primary);
+    padding: 28px;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-main::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--gold));
+  }
+  .hero-main:hover { background: var(--bg-card); }
+  .hero-main .category-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--blue-bright);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-main h1 {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--white);
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+  .hero-main .hero-excerpt {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted2);
+    font-family: var(--font-mono);
+  }
+  .hero-meta .author { color: var(--gold); }
+  .hero-meta .dot { opacity: 0.4; }
+
+  .hero-secondary {
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .hero-secondary-item {
+    background: var(--bg-card);
+    padding: 22px 24px;
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.2s;
+    border-left: 1px solid var(--border);
+  }
+  .hero-secondary-item:hover { background: var(--bg-card2); }
+  .hero-secondary-item .cat { font-size: 10px; font-family: var(--font-mono); letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .hero-secondary-item h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
+  .hero-secondary-item p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .hero-sidebar {
+    background: var(--bg-card);
+    border-left: 1px solid var(--border);
+  }
+  .sidebar-panel-title {
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── MARKETS PANEL ── */
+  .market-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .market-item:hover { background: var(--bg-card2); }
+  .market-item .m-name { font-size: 13px; font-weight: 600; }
+  .market-item .m-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .market-item .m-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+  .market-item .m-chg { font-family: var(--font-mono); font-size: 12px; padding: 2px 7px; border-radius: 4px; }
+  .m-chg.up { color: var(--green); background: rgba(0,208,132,0.12); }
+  .m-chg.down { color: var(--red); background: rgba(255,59,92,0.12); }
+  .market-item .m-right { text-align: right; }
+
+  /* ── SECTION HEADINGS ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title .line {
+    width: 4px; height: 24px;
+    background: var(--blue);
+    border-radius: 2px;
+  }
+  .section-title .line.gold { background: var(--gold); }
+  .section-title .line.red { background: var(--red); }
+  .section-title .line.green { background: var(--green); }
+  .see-all { font-size: 13px; color: var(--blue-bright); cursor: pointer; font-weight: 500; text-decoration: none; }
+  .see-all:hover { color: var(--white); }
+
+  /* ── NEWS GRID ── */
+  .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 32px; padding: 28px 0; }
+  .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); margin-bottom: 1px; }
+  .news-card {
+    background: var(--bg-card);
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.22s;
+    position: relative;
+    overflow: hidden;
+  }
+  .news-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--blue);
+    transform: scaleX(0);
+    transition: transform 0.2s;
+    transform-origin: left;
+  }
+  .news-card:hover { background: var(--bg-card2); }
+  .news-card:hover::after { transform: scaleX(1); }
+  .news-card .nc-cat {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .nc-cat.blue { color: var(--blue-bright); }
+  .nc-cat.gold { color: var(--gold); }
+  .nc-cat.red { color: var(--red); }
+  .nc-cat.green { color: var(--green); }
+  .news-card h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    color: var(--white);
+  }
+  .news-card p { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
+  .nc-meta { font-size: 11px; color: var(--muted2); font-family: var(--font-mono); display: flex; align-items: center; gap: 8px; }
+  .nc-meta .nc-author { color: var(--gold-light); }
+
+  /* ── FEATURED WIDE ── */
+  .news-card.wide { grid-column: span 2; }
+  .news-card.wide h3 { font-size: 22px; }
+
+  /* ── RESEARCH PAPERS ── */
+  .paper-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.22s;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .paper-card:hover { border-color: var(--blue); background: var(--bg-card2); transform: translateX(4px); }
+  .paper-num {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--blue);
+    opacity: 0.3;
+    min-width: 40px;
+    line-height: 1;
+    padding-top: 2px;
+  }
+  .paper-body h4 { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.3; margin-bottom: 7px; }
+  .paper-body p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+  .paper-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ptag {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+  }
+  .ptag.blue { border-color: var(--blue); color: var(--blue-bright); }
+  .ptag.gold { border-color: var(--gold); color: var(--gold); }
+
+  /* ── SIDEBAR ── */
+  .sidebar { position: relative; }
+  .sidebar-sticky { position: sticky; top: 130px; }
+  .sidebar-widget {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .sw-title {
+    padding: 14px 18px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sw-item {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .sw-item:last-child { border-bottom: none; }
+  .sw-item:hover { background: var(--bg-card2); }
+  .sw-rank {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--blue);
+    opacity: 0.4;
+    min-width: 22px;
+    line-height: 1.2;
+  }
+  .sw-item p { font-size: 13px; line-height: 1.4; font-weight: 500; }
+  .sw-item .sw-meta { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); }
+
+  /* ── COMPANIES ROW ── */
+  .companies-row {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .company-card {
+    background: var(--bg-card);
+    padding: 20px 24px;
+    min-width: 200px;
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.2s;
+  }
+  .company-card:hover { background: var(--bg-card2); }
+  .company-card .co-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .company-card .co-type { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 10px; letter-spacing: 0.5px; }
+  .company-card .co-price { font-family: var(--font-mono); font-size: 20px; font-weight: 700; }
+  .company-card .co-chg { font-size: 12px; font-family: var(--font-mono); }
+
+  /* ── CATEGORY BADGES ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+  .badge.breaking { background: rgba(255,59,92,0.15); color: var(--red); border: 1px solid rgba(255,59,92,0.3); }
+  .badge.live { background: rgba(0,208,132,0.12); color: var(--green); border: 1px solid rgba(0,208,132,0.3); }
+  .badge.ai { background: rgba(0,120,255,0.12); color: var(--blue-bright); border: 1px solid var(--border-accent); }
+  .badge.exclusive { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 0; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 40px 24px 24px;
+    margin-top: 60px;
+  }
+  .footer-inner { max-width: 1440px; margin: 0 auto; }
+  .footer-top { display: grid; grid-template-columns: 280px repeat(4,1fr); gap: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .footer-brand p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+  .footer-col h5 { font-size: 11px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .footer-col a { display: block; color: var(--muted); font-size: 13px; margin-bottom: 8px; text-decoration: none; transition: color 0.15s; }
+  .footer-col a:hover { color: var(--white); }
+  .footer-bottom { padding-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted2); font-family: var(--font-mono); }
+  .footer-bottom .copyright span { color: var(--blue-bright); }
+
+  /* ── UPDATE INDICATOR ── */
+  .update-toast {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border-accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    z-index: 2000;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 280px;
+  }
+  .update-toast.show { transform: translateX(0); }
+  .update-toast .toast-title { font-weight: 600; color: var(--white); margin-bottom: 3px; }
+  .update-toast .toast-sub { color: var(--muted); font-size: 12px; }
+
+  /* ── ARTICLE MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(6,6,16,0.95);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 20px;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 780px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(30px);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    position: relative;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 10;
+  }
+  .modal-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 36px; height: 36px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--white); background: var(--red); border-color: var(--red); }
+  .modal-body { padding: 24px 32px 32px; }
+  .modal-body .article-cat { font-size: 11px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--blue-bright); margin-bottom: 12px; }
+  .modal-body h2 { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1.25; margin-bottom: 14px; }
+  .modal-body .article-byline { font-size: 13px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .modal-body .article-byline span { color: var(--gold); }
+  .modal-body .article-lead { font-family: var(--font-display); font-size: 17px; line-height: 1.7; color: var(--white); margin-bottom: 20px; font-style: italic; }
+  .modal-body .article-text { font-size: 15px; line-height: 1.75; color: rgba(245,245,255,0.8); }
+  .modal-body .article-text p { margin-bottom: 16px; }
+  .modal-body .article-text h4 { font-family: var(--font-display); font-size: 19px; font-weight: 600; margin: 24px 0 12px; color: var(--white); }
+  .modal-body .article-text blockquote {
+    border-left: 3px solid var(--blue);
+    padding: 12px 20px;
+    margin: 20px 0;
+    background: var(--bg-card2);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: var(--muted);
+  }
+  .data-box {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin: 18px 0;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 16px;
+  }
+  .data-item .di-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; margin-bottom: 4px; }
+  .data-item .di-value { font-size: 22px; font-family: var(--font-mono); font-weight: 700; }
+  .data-item .di-value.up { color: var(--green); }
+  .data-item .di-value.dn { color: var(--red); }
+
+  /* ── LOADING SKELETON ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card2) 50%, var(--bg-card) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    height: 14px;
+    margin-bottom: 8px;
+  }
+
+  /* ── NEWS CATEGORIES ROW ── */
+  .cat-pills {
+    display: flex;
+    gap: 8px;
+    padding: 20px 0 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cat-pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: none;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+  }
+  .cat-pill:hover, .cat-pill.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+  }
+
+  /* ── MINI CHART PLACEHOLDER ── */
+  .sparkline { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
+  .spark-bar { width: 3px; background: var(--blue); border-radius: 1px; transition: height 0.3s; }
+
+  /* ── SPECIAL SECTIONS ── */
+  .jp-morgan-strip {
+    background: linear-gradient(135deg, #001033, #000820);
+    border: 1px solid rgba(0,120,255,0.2);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .blackrock-strip {
+    background: linear-gradient(135deg, #0a0a00, #1a1400);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 24px 0;
+  }
+  .bloomberg-strip {
+    background: linear-gradient(135deg, #001a0a, #00100a);
+    border: 1px solid rgba(0,208,132,0.2);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 24px 0;
+  }
+  .institution-logo { font-family: var(--font-display); font-size: 20px; font-weight: 900; }
+  .institution-logo.jp { color: #3a8bff; }
+  .institution-logo.br { color: var(--gold); }
+  .institution-logo.bb { color: var(--green); }
+  .institution-desc { font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 480px; }
+  .institution-stats { display: flex; gap: 28px; }
+  .inst-stat .is-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; margin-bottom: 3px; }
+  .inst-stat .is-value { font-family: var(--font-mono); font-size: 18px; font-weight: 700; }
+
+  /* ── QUANTUM / MATH SECTION ── */
+  .quantum-card {
+    background: linear-gradient(135deg, var(--bg-card), rgba(0,50,100,0.3));
+    border: 1px solid rgba(0,120,255,0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quantum-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .quantum-card .qc-label { font-size: 10px; font-family: var(--font-mono); letter-spacing: 2px; color: var(--blue-bright); margin-bottom: 8px; }
+  .quantum-card h4 { font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
+  .quantum-card .qc-formula { font-family: var(--font-mono); font-size: 12px; color: var(--green); opacity: 0.7; margin-top: 8px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .hero-grid { grid-template-columns: 1fr 1fr; }
+    .hero-sidebar { display: none; }
+    .two-col { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 768px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .news-grid { grid-template-columns: 1fr; }
+    .hero-main h1 { font-size: 24px; }
+    .header-search { display: none; }
+    .news-card.wide { grid-column: span 1; }
+    .footer-top { grid-template-columns: 1fr; }
+    .jp-morgan-strip { flex-direction: column; }
+    .institution-stats { flex-wrap: wrap; }
+    .data-box { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── SECTION LABEL BADGE ── */
+  .section-badge {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--blue);
+    color: white;
+    margin-left: 10px;
+  }
+
+  /* Number counter */
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .counter { animation: countUp 0.5s ease both; }
+
+  /* Smooth hover underline for text links */
+  .text-link {
+    color: var(--blue-bright);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .text-link:hover { border-color: var(--blue-bright); }
+
+  /* ── WSJ TOPICS SECTION ── */
+  .wsj-topics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+  .wsj-topic-card {
+    background: var(--bg-card);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .wsj-topic-card:hover { background: var(--bg-card2); }
+  .wsj-topic-card .wt-icon { font-size: 20px; margin-bottom: 8px; }
+  .wsj-topic-card .wt-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .wsj-topic-card .wt-count { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+
+  @media (max-width: 900px) {
+    .wsj-topics { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ANNOUNCEMENT BAR -->
+<div class="announcement-bar">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span><span class="live-dot"></span> LIVE MARKETS</span>
+    <span>Next update: <span class="update-time" id="nextUpdate">6:00 PM</span></span>
+    <span id="liveTime" style="color:var(--muted)"></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px;">
+    <span>S&P 500 <span style="color:var(--green)">▲ 0.38%</span></span>
+    <span>NASDAQ <span style="color:var(--green)">▲ 0.62%</span></span>
+    <span>DOW <span style="color:var(--red)">▼ 0.12%</span></span>
+    <span>BTC <span style="color:var(--green)">▲ 1.84%</span></span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-main">
+    <a class="logo" href="#" onclick="scrollToTop();return false;">
+      <div class="logo-icon">
+        <svg viewBox="0 0 18 18"><polyline points="2,14 6,8 10,11 14,4 16,6"/><line x1="2" y1="16" x2="16" y2="16"/></svg>
+      </div>
+      <span class="Capital">Capital</span><span class="Pulse">Pulse</span><span class="X">X</span>
+    </a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search markets, news, companies…" id="searchInput">
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" onclick="showSection('markets')">Markets</button>
+      <button class="btn-ghost" onclick="showSection('research')">Research</button>
+      <button class="btn-primary" onclick="showToast('📰 Newsletter subscribed! Daily updates at 6AM & 6PM.','Subscribed')">Subscribe</button>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-strip">
+  <div class="nav-inner">
+    <a class="nav-item active" onclick="filterNews('all');setActive(this)">All</a>
+    <a class="nav-item" onclick="filterNews('business');setActive(this)">Business</a>
+    <a class="nav-item" onclick="filterNews('markets');setActive(this)">Markets</a>
+    <a class="nav-item" onclick="filterNews('technology');setActive(this)">Technology</a>
+    <a class="nav-item" onclick="filterNews('ai');setActive(this)">AI & ML</a>
+    <a class="nav-item" onclick="filterNews('investment');setActive(this)">Investment</a>
+    <a class="nav-item" onclick="filterNews('startups');setActive(this)">Startups</a>
+    <a class="nav-item" onclick="filterNews('research');setActive(this)">Research</a>
+    <a class="nav-item" onclick="filterNews('jpmorgan');setActive(this)">JP Morgan</a>
+    <a class="nav-item" onclick="filterNews('blackrock');setActive(this)">BlackRock</a>
+    <a class="nav-item" onclick="filterNews('bloomberg');setActive(this)">Bloomberg</a>
+    <a class="nav-item" onclick="filterNews('quantum');setActive(this)">Quantum</a>
+    <a class="nav-item" onclick="filterNews('energy');setActive(this)">Energy & Oil</a>
+    <a class="nav-item" onclick="filterNews('wsj');setActive(this)">WSJ Pro</a>
+  </div>
+</nav>
+
+<!-- LIVE TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-label">LIVE ▸</div>
+  <div style="overflow:hidden;flex:1;">
+    <div class="ticker-inner" id="tickerInner">
+      <!-- JS injected -->
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="main-container" id="mainContent">
+
+  <!-- HERO -->
+  <section class="hero-section" id="heroSection">
+    <div class="hero-grid">
+      <!-- HERO MAIN -->
+      <div class="hero-main" onclick="openArticle(heroArticles[0])">
+        <div class="category-tag">
+          <span class="badge breaking">BREAKING</span>
+          &nbsp; MARKETS
+        </div>
+        <h1 id="heroTitle">Federal Reserve Signals Three Rate Cuts in 2026 as Inflation Retreats to 2.1% Target</h1>
+        <p class="hero-excerpt" id="heroExcerpt">Fed Chair Jerome Powell's landmark speech at the Jackson Hole Symposium rattled Wall Street as traders recalibrate bond positions. The S&P 500 surged 1.4% on the news, while the 10-year Treasury yield dipped below 4.2% for the first time since Q1 2024.</p>
+        <div class="hero-meta">
+          <span class="author">By Sarah Chen</span>
+          <span class="dot">·</span>
+          <span>March 24, 2026</span>
+          <span class="dot">·</span>
+          <span>8 min read</span>
+        </div>
+      </div>
+
+      <!-- SECONDARY ARTICLES -->
+      <div class="hero-secondary">
+        <div class="hero-secondary-item" onclick="openArticle(heroArticles[1])">
+          <div class="cat">AI INDUSTRY</div>
+          <h3>OpenAI's GPT-6 Surpasses Human Performance on All Standard Reasoning Benchmarks</h3>
+          <p>The model demonstrates emergent capabilities in scientific reasoning, coding, and multimodal analysis that were not explicitly trained.</p>
+        </div>
+        <div class="hero-secondary-item" onclick="openArticle(heroArticles[2])">
+          <div class="cat">INVESTMENT</div>
+          <h3>BlackRock Launches $50B AI Infrastructure Fund Targeting Data Center Build-Out</h3>
+          <p>The world's largest asset manager pivots to infrastructure investments as cloud demand outpaces supply by 340% globally.</p>
+        </div>
+        <div class="hero-secondary-item" onclick="openArticle(heroArticles[3])">
+          <div class="cat">TECHNOLOGY</div>
+          <h3>Apple, Google, Microsoft Jointly Back $20B Quantum Computing Consortium</h3>
+          <p>Tech giants pool resources to accelerate fault-tolerant quantum hardware by 2028 in landmark collaboration agreement.</p>
+        </div>
+      </div>
+
+      <!-- LIVE MARKETS SIDEBAR -->
+      <div class="hero-sidebar">
+        <div class="sidebar-panel-title">
+          LIVE MARKETS
+          <span class="live-dot" style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1.5s infinite;"></span>
+        </div>
+        <div id="marketsList"></div>
+        <div style="padding:12px 20px;border-top:1px solid var(--border);">
+          <button class="btn-ghost" style="width:100%;font-size:12px;" onclick="showSection('markets')">View Full Markets ▸</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORY PILLS -->
+  <div class="cat-pills">
+    <button class="cat-pill active" onclick="filterNews('all');setPillActive(this)">All News</button>
+    <button class="cat-pill" onclick="filterNews('deals');setPillActive(this)">Deals</button>
+    <button class="cat-pill" onclick="filterNews('earnings');setPillActive(this)">Earnings</button>
+    <button class="cat-pill" onclick="filterNews('energy');setPillActive(this)">Energy & Oil</button>
+    <button class="cat-pill" onclick="filterNews('entrepreneurship');setPillActive(this)">Entrepreneurship</button>
+    <button class="cat-pill" onclick="filterNews('cfo');setPillActive(this)">CFO Journal</button>
+    <button class="cat-pill" onclick="filterNews('cio');setPillActive(this)">CIO Journal</button>
+    <button class="cat-pill" onclick="filterNews('risk');setPillActive(this)">Risk & Compliance</button>
+    <button class="cat-pill" onclick="filterNews('pe');setPillActive(this)">Private Equity</button>
+    <button class="cat-pill" onclick="filterNews('vc');setPillActive(this)">Venture Capital</button>
+    <button class="cat-pill" onclick="filterNews('biotech');setPillActive(this)">Biotech</button>
+    <button class="cat-pill" onclick="filterNews('cyber');setPillActive(this)">Cybersecurity</button>
+    <button class="cat-pill" onclick="filterNews('quantum');setPillActive(this)">Quantum</button>
+  </div>
+
+  <!-- TOP NEWS GRID -->
+  <div id="newsGrid"></div>
+
+  <!-- INSTITUTION STRIPS -->
+  <div class="jp-morgan-strip">
+    <div>
+      <div class="institution-logo jp">JP Morgan</div>
+      <div class="institution-desc" style="margin-top:8px;">Global investment banking, securities, financial services and commercial banking. Q1 2026 outlook: cautiously bullish on equities, overweight fixed income.</div>
+    </div>
+    <div class="institution-stats">
+      <div class="inst-stat">
+        <div class="is-label">AUM</div>
+        <div class="is-value" style="color:var(--blue-bright)">$3.9T</div>
+      </div>
+      <div class="inst-stat">
+        <div class="is-label">NET INCOME</div>
+        <div class="is-value" style="color:var(--green)">$49.6B</div>
+      </div>
+      <div class="inst-stat">
+        <div class="is-label">STOCK (JPM)</div>
+        <div class="is-value" style="color:var(--white)" id="jpmPrice">$198.42</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="filterNews('jpmorgan')">View Reports ▸</button>
+  </div>
+
+  <div class="blackrock-strip">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div>
+        <div class="institution-logo br">BlackRock</div>
+        <div class="institution-desc" style="margin-top:8px;">World's largest asset manager. $10.5T AUM. Leading AI infrastructure and sustainable investment mandates for 2026.</div>
+      </div>
+      <div class="institution-stats">
+        <div class="inst-stat"><div class="is-label">AUM</div><div class="is-value" style="color:var(--gold)">$10.5T</div></div>
+        <div class="inst-stat"><div class="is-label">BLK STOCK</div><div class="is-value" style="color:var(--white)" id="blkPrice">$921.30</div></div>
+        <div class="inst-stat"><div class="is-label">REVENUE</div><div class="is-value" style="color:var(--green)">$19.4B</div></div>
+      </div>
+      <button class="btn-primary" style="background:var(--gold);color:#000;" onclick="filterNews('blackrock')">View Reports ▸</button>
+    </div>
+  </div>
+
+  <div class="bloomberg-strip">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div>
+        <div class="institution-logo bb">Bloomberg L.P.</div>
+        <div class="institution-desc" style="margin-top:8px;">Global financial data, news, analytics. Bloomberg Terminal serves 330,000+ subscribers. Real-time data across 35,000+ securities.</div>
+      </div>
+      <div class="institution-stats">
+        <div class="inst-stat"><div class="is-label">SUBSCRIBERS</div><div class="is-value" style="color:var(--green)">330K+</div></div>
+        <div class="inst-stat"><div class="is-label">REVENUE</div><div class="is-value" style="color:var(--white)">$13.2B</div></div>
+        <div class="inst-stat"><div class="is-label">SECURITIES</div><div class="is-value" style="color:var(--green)">35,000+</div></div>
+      </div>
+      <button class="btn-primary" style="background:var(--green);color:#000;" onclick="filterNews('bloomberg')">Live Data ▸</button>
+    </div>
+  </div>
+
+  <!-- TWO COLUMN -->
+  <div class="two-col">
+    <div>
+      <!-- AI RESEARCH PAPERS -->
+      <div class="section-header">
+        <div class="section-title">
+          <div class="line blue"></div>
+          Research Papers <span class="section-badge">NEW</span>
+        </div>
+        <a class="see-all" onclick="filterNews('research')">View All Papers ▸</a>
+      </div>
+      <div id="researchPapers"></div>
+
+      <!-- QUANTUM COMPUTING -->
+      <div class="section-header" style="margin-top:32px;">
+        <div class="section-title">
+          <div class="line"></div>
+          Quantum Computing
+        </div>
+        <a class="see-all" onclick="filterNews('quantum')">All Quantum ▸</a>
+      </div>
+      <div id="quantumSection"></div>
+
+      <!-- WALL STREET / STOCK MARKET -->
+      <div class="section-header" style="margin-top:32px;">
+        <div class="section-title">
+          <div class="line gold"></div>
+          Wall Street
+        </div>
+        <a class="see-all" onclick="filterNews('markets')">Full Markets ▸</a>
+      </div>
+      <div id="wallStreetSection" class="news-grid"></div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-sticky">
+        <!-- TRENDING -->
+        <div class="sidebar-widget">
+          <div class="sw-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            TRENDING NOW
+          </div>
+          <div id="trendingList"></div>
+        </div>
+
+        <!-- WSJ TOPICS -->
+        <div class="sidebar-widget">
+          <div class="sw-title">📰 WSJ PRO TOPICS</div>
+          <div style="padding:12px;">
+            <div class="wsj-topics" style="margin:0;">
+              <div class="wsj-topic-card" onclick="filterNews('deals')"><div class="wt-icon">🤝</div><div class="wt-name">Deals</div><div class="wt-count">48 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('earnings')"><div class="wt-icon">📊</div><div class="wt-name">Earnings</div><div class="wt-count">62 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('pe')"><div class="wt-icon">💼</div><div class="wt-name">Private Equity</div><div class="wt-count">31 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('vc')"><div class="wt-icon">🚀</div><div class="wt-name">Venture Capital</div><div class="wt-count">44 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('cfo')"><div class="wt-icon">💰</div><div class="wt-name">CFO Journal</div><div class="wt-count">27 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('cyber')"><div class="wt-icon">🔐</div><div class="wt-name">Cybersecurity</div><div class="wt-count">39 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('risk')"><div class="wt-icon">⚖️</div><div class="wt-name">Risk & Compliance</div><div class="wt-count">22 articles</div></div>
+              <div class="wsj-topic-card" onclick="filterNews('energy')"><div class="wt-icon">⚡</div><div class="wt-name">Energy & Oil</div><div class="wt-count">35 articles</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NET BANKING -->
+        <div class="sidebar-widget">
+          <div class="sw-title">🏦 NET BANKING UPDATE</div>
+          <div id="bankingList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPANIES -->
+  <div class="section-header">
+    <div class="section-title">
+      <div class="line green"></div>
+      AI Companies to Watch
+    </div>
+  </div>
+  <div class="companies-row" id="companiesRow"></div>
+
+  <!-- STARTUP SECTION -->
+  <div class="section-header" style="margin-top:32px;">
+    <div class="section-title">
+      <div class="line red"></div>
+      Startup Ecosystem
+    </div>
+    <a class="see-all" onclick="filterNews('startups')">All Startups ▸</a>
+  </div>
+  <div class="news-grid" id="startupGrid"></div>
+
+  <!-- MATH RESEARCH -->
+  <div class="section-header" style="margin-top:32px;">
+    <div class="section-title">
+      <div class="line"></div>
+      Mathematics & Financial Models
+    </div>
+  </div>
+  <div id="mathSection"></div>
+
+</div><!-- end main-container -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo" style="font-size:20px;">
+          <span class="Capital">Capital</span><span class="Pulse">Pulse</span><span class="X">X</span>
+        </div>
+        <p>Real-time financial intelligence for Wall Street professionals and Silicon Valley innovators. Delivering market insights, research, and breaking news — 6AM & 6PM daily.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Business</h5>
+        <a href="#" onclick="filterNews('deals');return false;">Deals</a>
+        <a href="#" onclick="filterNews('earnings');return false;">Earnings</a>
+        <a href="#" onclick="filterNews('energy');return false;">Energy & Oil</a>
+        <a href="#" onclick="filterNews('entrepreneurship');return false;">Entrepreneurship</a>
+        <a href="#" onclick="filterNews('pe');return false;">Private Equity</a>
+        <a href="#" onclick="filterNews('vc');return false;">Venture Capital</a>
+      </div>
+      <div class="footer-col">
+        <h5>Technology</h5>
+        <a href="#" onclick="filterNews('ai');return false;">AI & Machine Learning</a>
+        <a href="#" onclick="filterNews('biotech');return false;">Biotech</a>
+        <a href="#" onclick="filterNews('cyber');return false;">Cybersecurity</a>
+        <a href="#" onclick="filterNews('quantum');return false;">Quantum Computing</a>
+        <a href="#" onclick="filterNews('startups');return false;">Startups</a>
+      </div>
+      <div class="footer-col">
+        <h5>Research</h5>
+        <a href="#" onclick="filterNews('research');return false;">AI Research Papers</a>
+        <a href="#" onclick="filterNews('quantum');return false;">Quantum Papers</a>
+        <a href="#" onclick="filterNews('math');return false;">Mathematics</a>
+        <a href="#" onclick="filterNews('banking');return false;">Net Banking</a>
+      </div>
+      <div class="footer-col">
+        <h5>Institutions</h5>
+        <a href="#" onclick="filterNews('jpmorgan');return false;">JP Morgan</a>
+        <a href="#" onclick="filterNews('blackrock');return false;">BlackRock</a>
+        <a href="#" onclick="filterNews('bloomberg');return false;">Bloomberg</a>
+        <a href="#" onclick="filterNews('wsj');return false;">WSJ Pro</a>
+        <a href="#" onclick="filterNews('markets');return false;">Wall Street</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="copyright">© 2026 <span>CapitalPulseX</span>. All rights reserved. Financial information is for informational purposes only.</div>
+      <div>Updated: 6AM & 6PM Daily · <span style="color:var(--green)">● LIVE</span></div>
+    </div>
+  </div>
+</footer>
+
+<!-- UPDATE TOAST -->
+<div class="update-toast" id="updateToast">
+  <div class="toast-title" id="toastTitle">📡 Markets Updated</div>
+  <div class="toast-sub" id="toastSub">6:00 AM update — All data refreshed</div>
+</div>
+
+<!-- ARTICLE MODAL -->
+<div class="modal-overlay" id="articleModal" onclick="handleModalClick(event)">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-body" style="padding:0;border:none;">
+        <div class="article-cat" id="modalCat">MARKETS</div>
+        <h2 id="modalTitle">Article Title</h2>
+        <div class="article-byline" id="modalByline">By <span>Author</span> · Date · Read time</div>
+      </div>
+      <div class="modal-close" onclick="closeArticle()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="article-lead" id="modalLead"></div>
+      <div class="article-text" id="modalBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════
+
+const tickerData = [
+  { sym:'S&P 500', price:'5,872.16', chg:'+0.38%', up:true },
+  { sym:'NASDAQ', price:'18,430.22', chg:'+0.62%', up:true },
+  { sym:'DOW', price:'43,122.88', chg:'-0.12%', up:false },
+  { sym:'AAPL', price:'$198.74', chg:'+1.2%', up:true },
+  { sym:'NVDA', price:'$912.40', chg:'+2.8%', up:true },
+  { sym:'MSFT', price:'$418.62', chg:'+0.7%', up:true },
+  { sym:'GOOGL', price:'$178.30', chg:'-0.4%', up:false },
+  { sym:'AMZN', price:'$212.18', chg:'+1.1%', up:true },
+  { sym:'META', price:'$612.45', chg:'+1.9%', up:true },
+  { sym:'TSLA', price:'$248.60', chg:'-1.3%', up:false },
+  { sym:'JPM', price:'$198.42', chg:'+0.5%', up:true },
+  { sym:'BLK', price:'$921.30', chg:'+0.3%', up:true },
+  { sym:'GS', price:'$510.88', chg:'-0.2%', up:false },
+  { sym:'BTC/USD', price:'$67,420', chg:'+1.84%', up:true },
+  { sym:'ETH/USD', price:'$3,812', chg:'+2.1%', up:true },
+  { sym:'GOLD', price:'$2,348/oz', chg:'+0.22%', up:true },
+  { sym:'OIL WTI', price:'$78.42/bbl', chg:'-0.8%', up:false },
+  { sym:'EUR/USD', price:'1.0842', chg:'+0.1%', up:true },
+  { sym:'10Y TREAS', price:'4.18%', chg:'-0.06', up:false },
+  { sym:'VIX', price:'15.32', chg:'-1.2%', up:false },
+  { sym:'AMD', price:'$188.44', chg:'+3.2%', up:true },
+  { sym:'INTC', price:'$32.18', chg:'-0.8%', up:false },
+  { sym:'IBM', price:'$218.72', chg:'+0.4%', up:true },
+  { sym:'PLTR', price:'$28.40', chg:'+4.1%', up:true },
+];
+
+const markets = [
+  { name:'S&P 500', sub:'INDEX', price:'5,872.16', chg:'+21.2', pct:'+0.38%', up:true },
+  { name:'NASDAQ 100', sub:'INDEX', price:'18,430.22', chg:'+113.4', pct:'+0.62%', up:true },
+  { name:'DOW JONES', sub:'INDEX', price:'43,122.88', chg:'-51.7', pct:'-0.12%', up:false },
+  { name:'NIKKEI 225', sub:'JAPAN', price:'38,482.10', chg:'+284.6', pct:'+0.74%', up:true },
+  { name:'FTSE 100', sub:'UK', price:'8,124.50', chg:'-18.3', pct:'-0.22%', up:false },
+  { name:'DAX', sub:'GERMANY', price:'18,972.40', chg:'+88.2', pct:'+0.47%', up:true },
+  { name:'BTC/USD', sub:'CRYPTO', price:'$67,420', chg:'+1,248', pct:'+1.84%', up:true },
+  { name:'GOLD', sub:'COMMODITY', price:'$2,348', chg:'+5.2', pct:'+0.22%', up:true },
+];
+
+const heroArticles = [
+  {
+    cat:'MARKETS', title:'Federal Reserve Signals Three Rate Cuts in 2026',
+    author:'Sarah Chen', date:'March 24, 2026', readTime:'8 min',
+    lead:'In a pivotal speech at Jackson Hole, Fed Chair Jerome Powell outlined the most significant pivot in monetary policy since the pandemic-era rate hikes.',
+    body:`<p>Federal Reserve Chair Jerome Powell delivered what markets have been waiting years to hear: a clear, data-backed signal that the era of restrictive monetary policy is drawing to a close. Speaking at the annual Jackson Hole Economic Symposium, Powell cited three consecutive months of core PCE inflation at or below 2.1%, alongside a labor market that has achieved a "soft landing" by nearly every measurable metric.</p>
+<h4>Market Reaction</h4>
+<p>The S&P 500 surged 1.4% in the 90 minutes following the speech, while the 10-year Treasury yield collapsed 14 basis points to 4.18% — its lowest level in 26 months. Bond traders are now pricing in three 25-basis-point cuts by year-end, with the first expected at the May FOMC meeting.</p>
+<blockquote>"The time has come for policy to adjust. The direction of travel is clear, and the timing and pace of rate cuts will depend on incoming data, the evolving outlook, and the balance of risks." — Jerome Powell, Fed Chair</blockquote>
+<div class="data-box">
+  <div class="data-item"><div class="di-label">CORE PCE</div><div class="di-value up">2.1%</div></div>
+  <div class="data-item"><div class="di-label">UNEMPLOYMENT</div><div class="di-value">3.8%</div></div>
+  <div class="data-item"><div class="di-label">RATE TARGET</div><div class="di-value dn">4.25–4.5%</div></div>
+</div>
+<h4>Implications for Investors</h4>
+<p>The shift in Fed posture has immediate implications across asset classes. Rate-sensitive sectors — utilities, real estate, and long-duration tech stocks — rallied the most. Goldman Sachs revised its year-end S&P 500 target to 6,200 within hours of the announcement.</p>
+<p>JP Morgan's chief fixed income strategist noted that the Treasury market move was "orderly but decisive," adding that credit spreads tightened across investment-grade and high-yield categories. BlackRock's multi-asset team issued a note recommending investors increase equity duration exposure.</p>`
+  },
+  {
+    cat:'AI INDUSTRY', title:'OpenAI GPT-6 Surpasses Human Performance on All Standard Reasoning Benchmarks',
+    author:'Dr. Priya Sharma', date:'March 24, 2026', readTime:'12 min',
+    lead:'The release of GPT-6 marks what many AI researchers are calling an "inflection point" — a model that consistently outperforms expert humans across domains from medicine to law to scientific research.',
+    body:`<p>OpenAI's GPT-6, released Tuesday, represents the most significant capability leap in large language model history. The model achieves 94.7% on the MMLU benchmark, surpassing the average human expert score of 89.8% across all 57 domains. On the HumanEval coding benchmark, GPT-6 achieves 98.4% pass@1, effectively solving nearly all standard competitive programming problems on the first attempt.</p>
+<h4>Key Capabilities</h4>
+<p>The model demonstrates genuine multimodal reasoning — analyzing complex molecular structures, interpreting medical imaging, and generating executable robotics code from natural language descriptions. Researchers at MIT confirmed the model independently derived three previously unknown proofs in number theory during controlled testing.</p>
+<blockquote>"This isn't just incremental improvement. GPT-6 exhibits qualitative differences in how it approaches novel problems." — Dr. Ilya Sutskever, OpenAI Research</blockquote>
+<div class="data-box">
+  <div class="data-item"><div class="di-label">MMLU SCORE</div><div class="di-value up">94.7%</div></div>
+  <div class="data-item"><div class="di-label">HUMANEVAL</div><div class="di-value up">98.4%</div></div>
+  <div class="data-item"><div class="di-label">CONTEXT</div><div class="di-value">2M tokens</div></div>
+</div>
+<p>Wall Street's reaction was swift: Nvidia surged 4.2% as the GPU demand implications became clear. Microsoft, which holds exclusive rights to GPT-6 API access, saw its shares rise 2.1%, adding over $40 billion in market cap in a single session.</p>`
+  },
+  {
+    cat:'INVESTMENT', title:'BlackRock Launches $50B AI Infrastructure Fund',
+    author:'Marcus Webb', date:'March 23, 2026', readTime:'6 min',
+    lead:'The fund will target data center construction, power grid upgrades, and semiconductor fab investments across North America and Southeast Asia.',
+    body:`<p>BlackRock, the world's largest asset manager with $10.5 trillion in assets under management, announced the launch of its Global AI Infrastructure Fund (GAIF), targeting $50 billion in committed capital by end of 2026. The fund represents the largest single dedicated AI infrastructure vehicle in history.</p>
+<h4>Investment Thesis</h4>
+<p>CEO Larry Fink, speaking at the New York Economic Club, argued that AI compute demand is growing at 3.4x the current pace of infrastructure build-out. "We have a structural supply deficit in AI-grade computing that will persist for at least a decade," Fink said. "This is the railroads of the 21st century."</p>
+<div class="data-box">
+  <div class="data-item"><div class="di-label">FUND SIZE</div><div class="di-value up">$50B</div></div>
+  <div class="data-item"><div class="di-label">TARGET RETURN</div><div class="di-value up">14-18%</div></div>
+  <div class="data-item"><div class="di-label">HORIZON</div><div class="di-value">10 years</div></div>
+</div>
+<p>The fund's first investments include a $4.2 billion commitment to a 500MW data center campus in Prineville, Oregon, a $2.8 billion stake in CoreWeave, and partnerships with three major utilities for AI-dedicated power capacity contracts through 2040.</p>`
+  },
+  {
+    cat:'TECHNOLOGY', title:'Apple, Google, Microsoft Back $20B Quantum Consortium',
+    author:'James Liu', date:'March 23, 2026', readTime:'7 min',
+    lead:'The Quantum Horizon Consortium will pool IP and research talent to achieve fault-tolerant quantum computing by 2028 — a goal most experts previously estimated would take until 2035.',
+    body:`<p>In an announcement that stunned the technology world, Apple, Google, and Microsoft jointly revealed the Quantum Horizon Consortium (QHC), committing a combined $20 billion over five years to accelerate the development of practical, fault-tolerant quantum computers.</p>
+<h4>Technical Roadmap</h4>
+<p>The consortium's roadmap targets 10,000 logical qubits by 2027 and full fault-tolerant operation by 2028. Current state-of-the-art systems operate with fewer than 200 physical qubits at error rates that make practical computation infeasible. The QHC's approach combines Google's superconducting qubit architecture with Microsoft's topological qubit research and Apple's custom cryogenic control electronics.</p>
+<div class="data-box">
+  <div class="data-item"><div class="di-label">INVESTMENT</div><div class="di-value up">$20B</div></div>
+  <div class="data-item"><div class="di-label">TARGET QUBITS</div><div class="di-value up">10,000</div></div>
+  <div class="data-item"><div class="di-label">TIMELINE</div><div class="di-value">2028</div></div>
+</div>
+<p>The cryptography implications alone have prompted NIST to accelerate its post-quantum cryptography standardization process. Bank of America, JPMorgan, and Goldman Sachs have each committed to complete migration to quantum-safe encryption by 2027.</p>`
+  },
+];
+
+const newsData = [
+  { id:1, cat:'EARNINGS', catClass:'gold', title:'NVIDIA Reports $32.8B Revenue in Q4, Beats Estimates by 18%', excerpt:'Data center segment surges 278% YoY as AI chip demand shows no signs of deceleration. CEO Jensen Huang teases Blackwell Ultra architecture.', author:'Alex Torres', date:'Mar 24', tags:['earnings','markets','ai'], wide:true,
+    lead:'NVIDIA continues to defy gravity, posting the most profitable quarter in semiconductor history.',
+    body:'<p>NVIDIA Corporation reported fourth-quarter fiscal 2026 revenue of $32.8 billion, shattering analyst consensus of $27.8 billion. The data center segment, now accounting for 88% of total revenue, grew 278% year-over-year to $28.9 billion — driven entirely by H200 and Blackwell GPU demand for AI training and inference.</p><p>CEO Jensen Huang teased the Blackwell Ultra architecture, which promises 4x the inference performance of current-generation hardware. "The demand for accelerated computing is growing faster than our ability to supply," Huang said on the earnings call.</p><div class="data-box"><div class="data-item"><div class="di-label">REVENUE</div><div class="di-value up">$32.8B</div></div><div class="data-item"><div class="di-label">GROSS MARGIN</div><div class="di-value up">76.7%</div></div><div class="data-item"><div class="di-label">EPS</div><div class="di-value up">$7.83</div></div></div><p>The earnings beat sent NVIDIA shares up 6.8% in after-hours trading, pushing the company\'s market capitalization past $3.4 trillion, second only to Apple.</p>' },
+  { id:2, cat:'DEALS', catClass:'blue', title:'Softbank\'s $100B AI Investment Fund Closes Final Round', excerpt:'The Vision Fund III exceeds target with cornerstone investments from Saudi Aramco, Abu Dhabi Investment Authority, and major US pension funds.', author:'Rachel Kim', date:'Mar 24', tags:['deals','investment','ai'],
+    lead:'Masayoshi Son\'s largest-ever fund cements Japan\'s position at the center of global AI finance.',
+    body:'<p>SoftBank Group confirmed the final close of Vision Fund III at $100 billion, making it the largest dedicated technology investment vehicle ever raised. The fund attracted capital from Saudi Aramco\'s Prosperity7 Ventures, the Abu Dhabi Investment Authority, the Government of Singapore Investment Corporation, and a consortium of US public pension funds.</p><p>Son outlined an investment thesis centered on "AI becoming the oxygen of every industry" — with initial portfolio focus on AI infrastructure, robotics, autonomous systems, and AGI startups. The fund has already made 12 undisclosed investments totaling $18 billion.</p>' },
+  { id:3, cat:'AI RESEARCH', catClass:'blue', title:'Google DeepMind AlphaFold 3 Solves Entire Human Proteome With Drug-Design Accuracy', excerpt:'The breakthrough enables AI-designed proteins for every known human disease target, compressing drug discovery timelines from decades to months.', author:'Dr. Wei Zhang', date:'Mar 23', tags:['ai','research','biotech'],
+    lead:'AlphaFold 3 represents the most consequential advance in structural biology since the discovery of the double helix.',
+    body:'<p>Google DeepMind\'s AlphaFold 3 has achieved near-perfect structural prediction accuracy across the entire human proteome — 20,000+ proteins — including disordered regions that were previously considered computationally intractable. The model now predicts protein-ligand, protein-nucleic acid, and protein-protein interactions simultaneously, enabling end-to-end AI drug design.</p><div class="data-box"><div class="data-item"><div class="di-label">PROTEINS SOLVED</div><div class="di-value up">20,000+</div></div><div class="data-item"><div class="di-label">ACCURACY</div><div class="di-value up">97.2%</div></div><div class="data-item"><div class="di-label">SPEED</div><div class="di-value">< 1 min</div></div></div>' },
+  { id:4, cat:'VENTURE CAPITAL', catClass:'green', title:'Anthropic Raises $4B Series E at $82B Valuation, Largest AI Fundraise of 2026', excerpt:'The round, led by Google and Spark Capital, will fund development of Claude 4 and enterprise deployment infrastructure across 50 countries.', author:'Jennifer Walsh', date:'Mar 23', tags:['vc','ai','startups'],
+    lead:'Anthropic\'s latest raise underscores the AI safety company\'s emergence as a serious OpenAI rival.',
+    body:'<p>Anthropic has closed a $4 billion Series E funding round at an $82 billion post-money valuation, making it the second-most valuable AI company globally. The round was led by Google, which increased its cumulative investment to $4.5 billion, alongside Spark Capital, Tiger Global, and new investor General Atlantic.</p><p>CEO Dario Amodei outlined plans to deploy the capital across three fronts: advancing Claude 4 model capabilities, building enterprise-grade deployment infrastructure, and expanding safety research.</p>' },
+  { id:5, cat:'ENERGY & OIL', catClass:'red', title:'Saudi Aramco Partners With NEOM on 10GW AI Data Center Powered by Desert Solar', excerpt:'The $28B mega-project will create the world\'s largest carbon-neutral AI compute facility, targeting completion by 2028.', author:'Omar Al-Rashid', date:'Mar 22', tags:['energy','ai','deals'],
+    lead:'NEOM\'s THE LINE project pivots to become the world\'s most ambitious AI infrastructure build.',
+    body:'<p>Saudi Aramco and NEOM announced a landmark $28 billion joint venture to construct a 10-gigawatt AI data center campus powered entirely by desert solar and offshore wind. The facility, projected to come online in phases from 2027, would provide compute capacity equivalent to 50 times the current compute capacity of all of Europe combined.</p>' },
+  { id:6, cat:'CYBERSECURITY', catClass:'red', title:'CISA Issues Emergency Directive After Critical Infrastructure Attacks Detected in 12 States', excerpt:'Nation-state actors exploited a zero-day in industrial control systems. Federal agencies have 24 hours to apply emergency patches.', author:'Mike Donovan', date:'Mar 24', tags:['cyber','risk'],
+    lead:'The most serious infrastructure cybersecurity event since the Colonial Pipeline attack unfolds across the US power grid.',
+    body:'<p>The Cybersecurity and Infrastructure Security Agency issued an emergency directive mandating immediate patching of a critical zero-day vulnerability in Siemens SIMATIC industrial control systems. The vulnerability, tracked as CVE-2026-22841, allows unauthenticated remote code execution on PLCs controlling power generation and water treatment infrastructure.</p><div class="data-box"><div class="data-item"><div class="di-label">SEVERITY</div><div class="di-value dn">Critical 9.9</div></div><div class="data-item"><div class="di-label">AFFECTED SYSTEMS</div><div class="di-value dn">~4,200</div></div><div class="data-item"><div class="di-label">PATCH DEADLINE</div><div class="di-value dn">24 Hours</div></div></div>' },
+];
+
+const researchPapers = [
+  { num:'01', tags:['AI','LLM'], tagsClass:['blue','blue'], title:'Scaling Laws for Neural Language Models: Revisited at 10^25 FLOPs', authors:'Kaplan et al., OpenAI', abstract:'We re-examine the Chinchilla scaling laws at parameter counts exceeding 1 trillion, finding novel power-law relationships between compute, data, and emergent reasoning capabilities.', date:'March 2026' },
+  { num:'02', tags:['QUANTUM','PHYSICS'], tagsClass:['gold','blue'], title:'Fault-Tolerant Quantum Computation via Topological Codes at Room Temperature', authors:'Freedman et al., Microsoft Research', abstract:'We demonstrate logical qubit lifetimes exceeding 10 seconds using Majorana-based topological qubits at 4 Kelvin, representing a 1,000x improvement over prior art.', date:'March 2026' },
+  { num:'03', tags:['NET BANKING','FINTECH'], tagsClass:['green','blue'], title:'Distributed Ledger Architecture for Real-Time Gross Settlement: A CBDC Framework', authors:'BIS Innovation Hub', abstract:'A comprehensive framework for implementing retail and wholesale CBDCs using permissioned blockchain with privacy-preserving transaction validation via ZK-SNARKs.', date:'Feb 2026' },
+  { num:'04', tags:['MATHEMATICS','FINANCE'], tagsClass:['gold','gold'], title:'Deep Reinforcement Learning for Portfolio Optimization Under Non-Stationary Markets', authors:'Ritter et al., Goldman Sachs AI Research', abstract:'Novel RL framework that outperforms classical Markowitz and Black-Litterman models by 340 basis points annualized on out-of-sample historical data from 1990–2025.', date:'March 2026' },
+  { num:'05', tags:['AI SAFETY','ALIGNMENT'], tagsClass:['blue','blue'], title:'Constitutional AI at Scale: Reward Model Generalization Beyond 175B Parameters', authors:'Anthropic Safety Team', abstract:'We demonstrate that RLHF-trained reward models exhibit stable alignment properties at model scales previously untested, with implications for AGI safety architectures.', date:'March 2026' },
+  { num:'06', tags:['QUANTUM','CRYPTOGRAPHY'], tagsClass:['gold','red'], title:'Post-Quantum Cryptography: CRYSTALS-Kyber Implementation at Financial Scale', authors:'NIST + JPMorgan FLARE Lab', abstract:'First production-scale deployment of NIST-standardized post-quantum algorithms across a live banking network, demonstrating sub-millisecond latency overhead.', date:'Feb 2026' },
+];
+
+const quantumCards = [
+  { label:'QUANTUM COMPUTING', title:'IBM Condor Processor Achieves 1,000-Qubit Milestone With Error Rate Below 0.1%', formula:'|ψ⟩ = α|0⟩ + β|1⟩  where |α|² + |β|² = 1', tags:['IBM','Hardware'] },
+  { label:'QUANTUM ALGORITHMS', title:'Shor\'s Algorithm Implementation Threatens RSA-2048 Encryption: NIST Responds', formula:'N = p × q → Quantum Period Finding O(log³N)', tags:['Security','Algorithms'] },
+  { label:'QUANTUM NETWORKING', title:'China-EU Quantum Internet Backbone Achieves 1,200km Entanglement Distribution', formula:'Bell State: |Φ+⟩ = (|00⟩ + |11⟩)/√2', tags:['Networking','Quantum'] },
+];
+
+const wallStreetNews = [
+  { cat:'WALL STREET', catClass:'gold', title:'Goldman Sachs Revises S&P 500 Year-End Target to 6,400 After Fed Pivot', excerpt:'The bank\'s chief equity strategist cites multiple expansion potential and earnings growth as the two key drivers.', author:'David Solomon Jr.', date:'Mar 24', tags:['wsj','markets'],
+    lead:'Goldman\'s bullish call represents the highest major bank year-end target on Wall Street.',
+    body:'<p>Goldman Sachs raised its year-end 2026 S&P 500 price target to 6,400 from 5,800, citing the Federal Reserve\'s dovish pivot, resilient corporate earnings, and the AI-driven productivity boom. Chief US equity strategist David Kostin argued that forward P/E multiples can sustain at 22-24x in a declining rate environment.</p><div class="data-box"><div class="data-item"><div class="di-label">OLD TARGET</div><div class="di-value">5,800</div></div><div class="data-item"><div class="di-label">NEW TARGET</div><div class="di-value up">6,400</div></div><div class="data-item"><div class="di-label">UPSIDE</div><div class="di-value up">+9.0%</div></div></div>' },
+  { cat:'HEARD ON STREET', catClass:'blue', title:'Morgan Stanley: AI Capex Cycle Will Last Through 2030, Not Peaking in 2025', excerpt:'Bull case analysis suggests hyperscaler AI infrastructure spending could reach $400B annually by 2028, doubling current pace.', author:'Katy Huberty', date:'Mar 23', tags:['wsj','investment','ai'],
+    lead:'Morgan Stanley\'s tech team dismantles the "peak capex" thesis that has held down some AI infrastructure stocks.',
+    body:'<p>Morgan Stanley\'s technology team published a comprehensive 87-page report arguing that AI capital expenditure is only entering its second phase — moving from model training infrastructure to inference-at-scale and edge deployment. The team models $400 billion in annual AI infrastructure spending by hyperscalers alone by 2028.</p>' },
+  { cat:'RISK & COMPLIANCE', catClass:'red', title:'SEC Proposes Mandatory AI Disclosure Rules for Public Companies by Q3 2026', excerpt:'The proposal would require quarterly disclosures on AI model risks, training data provenance, and algorithmic decision-making in financial products.', author:'Gary Gensler', date:'Mar 22', tags:['wsj','risk','ai'],
+    lead:'The SEC\'s most consequential rulemaking in the AI era would reshape how companies disclose emerging technology risks.',
+    body:'<p>The Securities and Exchange Commission proposed sweeping new rules requiring public companies to disclose material risks from AI system deployment, training data practices, and algorithmic decision-making. The 340-page proposal, released for public comment, would create a new Form AI-1 to be filed alongside quarterly 10-Q reports.</p>' },
+];
+
+const companies = [
+  { name:'NVIDIA', type:'AI CHIPS', price:'$912.40', chg:'+2.8%', up:true },
+  { name:'OpenAI', type:'AI RESEARCH', price:'$157B', chg:'+12.4%', up:true },
+  { name:'Anthropic', type:'AI SAFETY', price:'$82B', chg:'+4.8%', up:true },
+  { name:'xAI', type:'ELON MUSK AI', price:'$45B', chg:'+8.2%', up:true },
+  { name:'Google DeepMind', type:'AI R&D', price:'—', chg:'+1.2%', up:true },
+  { name:'Microsoft AI', type:'AZURE + COPILOT', price:'$418.62', chg:'+0.7%', up:true },
+  { name:'Palantir', type:'AI ANALYTICS', price:'$28.40', chg:'+4.1%', up:true },
+  { name:'Scale AI', type:'DATA LABELING', price:'$13.8B', chg:'+6.3%', up:true },
+];
+
+const startupNews = [
+  { cat:'STARTUP', catClass:'green', title:'Mistral AI Raises €600M to Build Europe\'s First Frontier AI Model', excerpt:'The Paris-based startup targets language parity with GPT-4 class models while building on open-source foundations.', author:'Pierre Ferragu', date:'Mar 23', tags:['startups','ai','vc'],
+    lead:'Mistral\'s latest round values the 18-month-old company at €6 billion, Europe\'s most valuable AI startup.',
+    body:'<p>Mistral AI closed a €600 million Series C funding round at a €6 billion valuation, cementing its position as Europe\'s leading frontier AI lab. The round was led by Andreessen Horowitz with participation from Nvidia, Salesforce Ventures, and BNP Paribas.</p>' },
+  { cat:'FINTECH', catClass:'blue', title:'Stripe Processes $1.4T in Payments in 2025, IPO Expected H2 2026', excerpt:'The fintech giant\'s revenue surpassed $20B for the first time, with AI-powered fraud detection cutting chargebacks by 67%.', author:'Patrick Collison', date:'Mar 22', tags:['startups','fintech','ipo'],
+    lead:'Stripe\'s long-awaited IPO edges closer as its financial metrics justify a $95B+ public market valuation.',
+    body:'<p>Stripe reported full-year 2025 payment volume of $1.4 trillion, a 42% increase from 2024, with total revenue crossing $20 billion for the first time. The company\'s AI-powered fraud detection system, built on a proprietary 200 billion transaction dataset, has reduced chargeback rates by 67% for enterprise clients.</p>' },
+  { cat:'DEEPTECH', catClass:'red', title:'Figure AI\'s Humanoid Robots Begin BMW Factory Deployment: 1,000 Units by Q4', excerpt:'The Series B startup ships commercial-grade bipedal robots capable of performing 94% of automotive assembly tasks autonomously.', author:'Brett Adcock', date:'Mar 21', tags:['startups','ai','manufacturing'],
+    lead:'Figure\'s BMW contract is the first large-scale commercial deployment of humanoid robots in a US manufacturing facility.',
+    body:'<p>Figure AI began deployment of its Figure 02 humanoid robots at BMW\'s Spartanburg, South Carolina plant, with 150 units currently operational and 1,000 more scheduled by Q4 2026. The robots can perform complex multi-step assembly tasks, navigate dynamic factory floors, and self-report maintenance needs with 97% uptime.</p>' },
+];
+
+const mathPapers = [
+  { num:'01', tags:['STOCHASTIC','FINANCE'], tagsClass:['gold','gold'], title:'Generalized Black-Scholes for Stochastic Volatility Regimes: A Rough Path Extension', authors:'El Karoui et al., Paris VI', abstract:'Extension of classical option pricing theory to rough volatility models (H < 0.5) using Gubinelli\'s controlled rough paths. Empirically validated on 30 years of S&P 500 options data.', date:'March 2026' },
+  { num:'02', tags:['TOPOLOGY','AI'], tagsClass:['blue','blue'], title:'Topological Data Analysis of Neural Network Loss Landscapes at Scale', authors:'Carlsson et al., Stanford Applied Math', abstract:'Using persistent homology to characterize the loss landscape geometry of large language models, explaining why SGD finds flat minima that generalize better than sharp minima.', date:'Feb 2026' },
+];
+
+const trending = [
+  { rank:'1', text:'Fed Rate Cut Expectations: Full Timeline for 2026', meta:'Markets · 48.2K reads' },
+  { rank:'2', text:'GPT-6 vs Claude 4 vs Gemini Ultra 2: Complete Benchmark Comparison', meta:'AI · 42.1K reads' },
+  { rank:'3', text:'BlackRock $50B AI Fund: How to Gain Exposure', meta:'Investment · 38.7K reads' },
+  { rank:'4', text:'NVIDIA Earnings: What the Numbers Mean for AI Infrastructure', meta:'Earnings · 31.4K reads' },
+  { rank:'5', text:'Quantum Computing Timeline: When Will It Break Encryption?', meta:'Quantum · 28.9K reads' },
+  { rank:'6', text:'Stripe IPO: Everything Investors Need to Know', meta:'Startups · 22.3K reads' },
+  { rank:'7', text:'JPMorgan 2026 Outlook: Overweight Fixed Income, Neutral Equities', meta:'JP Morgan · 19.8K reads' },
+];
+
+const bankingNews = [
+  { rank:'→', text:'BIS Finalizes Net Banking Digital Identity Framework for 85 Nations', meta:'Net Banking · Mar 24' },
+  { rank:'→', text:'JPMorgan\'s ONYX Blockchain Processes $1B in Daily Bank-to-Bank Settlements', meta:'Net Banking · Mar 23' },
+  { rank:'→', text:'India UPI Hits 14 Billion Monthly Transactions — Model for Global CBDCs', meta:'Fintech · Mar 22' },
+  { rank:'→', text:'EU Digital Euro Enters Pilot Phase With 5 Million Test Users Across 8 Countries', meta:'CBDC · Mar 21' },
+];
+
+// ════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ════════════════════════════════════════════════════
+
+function renderTicker() {
+  const inner = document.getElementById('tickerInner');
+  const doubled = [...tickerData, ...tickerData];
+  inner.innerHTML = doubled.map(t => `
+    <div class="ticker-item">
+      <span class="sym">${t.sym}</span>
+      <span class="price">${t.price}</span>
+      <span class="chg ${t.up?'up':'down'}">${t.chg}</span>
+    </div>
+  `).join('');
+}
+
+function renderMarkets() {
+  const el = document.getElementById('marketsList');
+  el.innerHTML = markets.map(m => `
+    <div class="market-item" onclick="openArticle({cat:'MARKETS',title:'${m.name} Live Data & Analysis',author:'CapitalPulseX Markets Desk',date:'Live',readTime:'—',lead:'Real-time market data for ${m.name}.',body:'<p>Live market data and analysis for ${m.name}. Price: ${m.price} | Change: ${m.chg} (${m.pct}).</p>'})">
+      <div>
+        <div class="m-name">${m.name}</div>
+        <div class="m-sub">${m.sub}</div>
+      </div>
+      <div class="m-right">
+        <div class="m-price">${m.price}</div>
+        <span class="m-chg ${m.up?'up':'down'}">${m.pct}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNewsGrid() {
+  const el = document.getElementById('newsGrid');
+  el.innerHTML = `<div class="news-grid" id="newsGridInner">` +
+    newsData.map(a => `
+      <div class="news-card${a.wide?' wide':''}" onclick="openArticle(allArticlesMap[${a.id}])">
+        <div class="nc-cat ${a.catClass}">${a.cat}</div>
+        <h3>${a.title}</h3>
+        <p>${a.excerpt}</p>
+        <div class="nc-meta">
+          <span class="nc-author">${a.author}</span>
+          <span>·</span>
+          <span>${a.date}</span>
+        </div>
+      </div>
+    `).join('') + `</div>`;
+}
+
+function renderResearchPapers() {
+  const el = document.getElementById('researchPapers');
+  el.innerHTML = researchPapers.map(p => `
+    <div class="paper-card" onclick="openArticle({cat:'RESEARCH PAPER',title:'${p.title}',author:p.authors,date:p.date,readTime:'Full Paper',lead:p.abstract,body:'<p>${p.abstract}</p><p>Published: ${p.date}</p><p>Authors: ${p.authors}</p>'})">
+      <div class="paper-num">${p.num}</div>
+      <div class="paper-body">
+        <h4>${p.title}</h4>
+        <p>${p.abstract}</p>
+        <div class="paper-tags">
+          ${p.tags.map((t,i)=>`<span class="ptag ${p.tagsClass[i]||''}">${t}</span>`).join('')}
+          <span class="ptag">${p.date}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderQuantum() {
+  const el = document.getElementById('quantumSection');
+  el.innerHTML = quantumCards.map(q => `
+    <div class="quantum-card" onclick="openArticle({cat:'QUANTUM COMPUTING',title:'${q.title}',author:'CapitalPulseX Research',date:'March 2026',readTime:'5 min',lead:'${q.title}',body:'<p>Quantum computing advances continue to reshape the technological and financial landscape. This development has significant implications for cryptography, drug discovery, financial modeling, and materials science.</p><blockquote>${q.formula}</blockquote>'})">
+      <div class="qc-label">${q.label}</div>
+      <h4>${q.title}</h4>
+      <div class="qc-formula">${q.formula}</div>
+    </div>
+  `).join('');
+}
+
+function renderWallStreet() {
+  const el = document.getElementById('wallStreetSection');
+  el.innerHTML = wallStreetNews.map(a => `
+    <div class="news-card" onclick="openArticle(wallStreetMap['${a.title.substring(0,20)}'])">
+      <div class="nc-cat ${a.catClass}">${a.cat}</div>
+      <h3>${a.title}</h3>
+      <p>${a.excerpt}</p>
+      <div class="nc-meta">
+        <span class="nc-author">${a.author}</span>
+        <span>·</span>
+        <span>${a.date}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCompanies() {
+  const el = document.getElementById('companiesRow');
+  el.innerHTML = companies.map(c => `
+    <div class="company-card" onclick="showToast('📊 ${c.name} full profile coming soon','Company Profile')">
+      <div class="co-name">${c.name}</div>
+      <div class="co-type">${c.type}</div>
+      <div class="co-price" style="color:${c.up?'var(--green)':'var(--red)'}">${c.price}</div>
+      <div class="co-chg ${c.up?'up':'down'}">${c.chg}</div>
+    </div>
+  `).join('');
+}
+
+function renderStartups() {
+  const el = document.getElementById('startupGrid');
+  el.innerHTML = startupNews.map(a => `
+    <div class="news-card" onclick="openArticle(startupMap['${a.title.substring(0,20)}'])">
+      <div class="nc-cat ${a.catClass}">${a.cat}</div>
+      <h3>${a.title}</h3>
+      <p>${a.excerpt}</p>
+      <div class="nc-meta">
+        <span class="nc-author">${a.author}</span>
+        <span>·</span>
+        <span>${a.date}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMath() {
+  const el = document.getElementById('mathSection');
+  el.innerHTML = mathPapers.map(p => `
+    <div class="paper-card" onclick="showToast('📄 Opening research paper: ${p.title.substring(0,40)}...','Research')">
+      <div class="paper-num">${p.num}</div>
+      <div class="paper-body">
+        <h4>${p.title}</h4>
+        <p>${p.abstract}</p>
+        <div class="paper-tags">
+          ${p.tags.map((t,i)=>`<span class="ptag ${p.tagsClass[i]||''}">${t}</span>`).join('')}
+          <span class="ptag">${p.date}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTrending() {
+  const el = document.getElementById('trendingList');
+  el.innerHTML = trending.map(t => `
+    <div class="sw-item" onclick="showToast('📖 Loading: ${t.text.substring(0,30)}...','Article')">
+      <div class="sw-rank">${t.rank}</div>
+      <div><p>${t.text}</p><div class="sw-meta">${t.meta}</div></div>
+    </div>
+  `).join('');
+}
+
+function renderBanking() {
+  const el = document.getElementById('bankingList');
+  el.innerHTML = bankingNews.map(t => `
+    <div class="sw-item" onclick="showToast('🏦 Loading banking article...','Net Banking')">
+      <div style="font-size:16px;color:var(--blue-bright);min-width:20px;">${t.rank}</div>
+      <div><p style="font-size:12px;">${t.text}</p><div class="sw-meta">${t.meta}</div></div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════
+// ARTICLE MODAL
+// ════════════════════════════════════════════════════
+
+function openArticle(article) {
+  if (!article) return;
+  document.getElementById('modalCat').textContent = article.cat || 'NEWS';
+  document.getElementById('modalTitle').textContent = article.title || '';
+  document.getElementById('modalByline').innerHTML = `By <span>${article.author || 'Staff Reporter'}</span> · ${article.date || 'Today'} · ${article.readTime || '5 min read'}`;
+  document.getElementById('modalLead').textContent = article.lead || '';
+  document.getElementById('modalBody').innerHTML = article.body || '<p>Full article content available.</p>';
+  document.getElementById('articleModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeArticle() {
+  document.getElementById('articleModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleModalClick(e) {
+  if (e.target === document.getElementById('articleModal')) closeArticle();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeArticle(); });
+
+// ════════════════════════════════════════════════════
+// FILTERING
+// ════════════════════════════════════════════════════
+
+function filterNews(tag) {
+  const cards = document.querySelectorAll('.news-card');
+  cards.forEach(card => {
+    card.style.display = '';
+  });
+  if (tag === 'all') return;
+  showToast(`🔍 Filtering: ${tag.toUpperCase()}`, 'Category Filter');
+}
+
+function setActive(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setPillActive(el) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function showSection(name) {
+  const sectionMap = { markets: '#heroSection', research: '#researchPapers' };
+  const target = document.querySelector(sectionMap[name]);
+  if (target) target.scrollIntoView({ behavior: 'smooth' });
+}
+
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+// ════════════════════════════════════════════════════
+// TOAST NOTIFICATION
+// ════════════════════════════════════════════════════
+
+let toastTimeout;
+function showToast(msg, title) {
+  const toast = document.getElementById('updateToast');
+  document.getElementById('toastTitle').textContent = title || 'Update';
+  document.getElementById('toastSub').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ════════════════════════════════════════════════════
+// LIVE TIME & AUTO-UPDATE
+// ════════════════════════════════════════════════════
+
+function updateTime() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  const s = now.getSeconds().toString().padStart(2,'0');
+  const el = document.getElementById('liveTime');
+  if (el) el.textContent = `${h}:${m}:${s} EST`;
+
+  // Simulate next update time
+  const nextEl = document.getElementById('nextUpdate');
+  if (nextEl) {
+    if (now.getHours() < 18) nextEl.textContent = '6:00 PM EST';
+    else nextEl.textContent = '6:00 AM EST';
+  }
+}
+
+function simulateLivePriceUpdate() {
+  const marketItems = document.querySelectorAll('.market-item .m-price');
+  marketItems.forEach(el => {
+    el.style.transition = 'color 0.3s';
+    el.style.color = 'var(--gold)';
+    setTimeout(() => el.style.color = 'var(--white)', 600);
+  });
+  // Random fluctuations
+  document.getElementById('jpmPrice').textContent = '$' + (198 + (Math.random() - 0.5) * 2).toFixed(2);
+  document.getElementById('blkPrice').textContent = '$' + (921 + (Math.random() - 0.5) * 5).toFixed(2);
+}
+
+// Schedule 6AM and 6PM update simulation
+function checkScheduledUpdates() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+  if ((h === 6 || h === 18) && m === 0 && s === 0) {
+    showToast(`📡 All data refreshed — ${h === 6 ? 'Morning' : 'Evening'} edition live`, `${h === 6 ? '6:00 AM' : '6:00 PM'} Daily Update`);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// SEARCH
+// ════════════════════════════════════════════════════
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  if (q.length < 2) { document.querySelectorAll('.news-card').forEach(c => c.style.display = ''); return; }
+  document.querySelectorAll('.news-card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+});
+
+// ════════════════════════════════════════════════════
+// ARTICLE MAPS
+// ════════════════════════════════════════════════════
+
+const allArticlesMap = {};
+newsData.forEach(a => allArticlesMap[a.id] = a);
+
+const wallStreetMap = {};
+wallStreetNews.forEach(a => { wallStreetMap[a.title.substring(0,20)] = a; });
+
+const startupMap = {};
+startupNews.forEach(a => { startupMap[a.title.substring(0,20)] = a; });
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+
+function init() {
+  renderTicker();
+  renderMarkets();
+  renderNewsGrid();
+  renderResearchPapers();
+  renderQuantum();
+  renderWallStreet();
+  renderCompanies();
+  renderStartups();
+  renderMath();
+  renderTrending();
+  renderBanking();
+
+  // Wire up wall street card clicks properly
+  const wsCards = document.querySelectorAll('#wallStreetSection .news-card');
+  wsCards.forEach((card, i) => {
+    if (wallStreetNews[i]) {
+      card.onclick = () => openArticle(wallStreetNews[i]);
+    }
+  });
+
+  const startupCards = document.querySelectorAll('#startupGrid .news-card');
+  startupCards.forEach((card, i) => {
+    if (startupNews[i]) card.onclick = () => openArticle(startupNews[i]);
+  });
+
+  setInterval(updateTime, 1000);
+  setInterval(simulateLivePriceUpdate, 8000);
+  setInterval(checkScheduledUpdates, 1000);
+  updateTime();
+
+  // Initial welcome toast
+  setTimeout(() => showToast('Markets open — All data live & refreshed', 'CapitalPulseX'), 1500);
+
+  // Animate cards in
+  document.querySelectorAll('.news-card, .paper-card, .quantum-card').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.04}s`;
+    el.style.animation = 'fadeInUp 0.5s ease both';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
